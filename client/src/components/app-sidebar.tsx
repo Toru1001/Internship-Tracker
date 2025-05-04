@@ -1,5 +1,15 @@
-import { useState } from "react";
-import { Calendar, FileClock, LayoutDashboard, ListTodo } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Calendar,
+  File,
+  FileClock,
+  LayoutDashboard,
+  ListTodo,
+  Users,
+  ClipboardList,
+  Archive,
+  UserRoundPen,
+} from "lucide-react";
 import Logo from "@/assets/LogoWithoutBg.png";
 import {
   Sidebar,
@@ -12,47 +22,69 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { getUserData } from "@/lib/getData";
+import { logoutUser } from "@/lib/authService";
+import { User } from "./model/datamodel";
 
-const items = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Tasks",
-    url: "/tasks",
-    icon: ListTodo,
-  },
-  {
-    title: "View Logs",
-    url: "/logs",
-    icon: FileClock,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-];
-
-// Dummy user data (replace later with real user context or props)
-const user = {
-  email: "user@example.com",
-  profileImage: "https://i.pravatar.cc/300", // you can use real image here
+const getItemsByRole = (role: string) => {
+  if (role === "Intern") {
+    return [
+      { title: "Tasks", url: "/tasks", icon: ListTodo },
+      { title: "Feedbacks", url: "/feedbacks", icon: FileClock },
+      { title: "Incomplete Requirements", url: "/requirements", icon: File },
+    ];
+  } else if (role === "Supervisor") {
+    return [
+      { title: "View Logs", url: "/logs", icon: ClipboardList },
+      { title: "Interns", url: "/interns", icon: Users },
+      { title: "Archives", url: "/archives", icon: Archive },
+    ];
+  } else if (role === "Admin") {
+    return [
+      { title: "Assign Intern", url: "/assign", icon: UserRoundPen },
+      { title: "Users", url: "/interns", icon: Users },
+    ];
+  }
+  return [];
 };
 
 export function AppSidebar() {
+  const [user, setUser] = useState<User | null>(null);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
 
-  const handleToggleDropdown = () => {
-    setDropdownOpen(!isDropdownOpen);
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await getUserData();
+        const data = response.data;
+
+        setUser({
+          name: data.name,
+          profileImage: data.profileImage || "https://i.pravatar.cc/300",
+          role: data.role,
+        });
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleToggleDropdown = () => setDropdownOpen(!isDropdownOpen);
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser(); 
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      localStorage.clear(); 
+      window.location.href = "/login";
+    }
   };
 
-  const handleLogout = () => {
-    console.log("Logging out...");
-    // TODO: Insert real logout logic here
-  };
+  const items = getItemsByRole(user?.role || "");
 
   return (
     <Sidebar variant="floating">
@@ -86,17 +118,19 @@ export function AppSidebar() {
 
       {/* Sidebar Footer with Profile */}
       <SidebarFooter className="relative mx-2 border-t-1">
-        <button
-          onClick={handleToggleDropdown}
-          className="flex items-center gap-2 w-full p-2 rounded hover:bg-gray-100  cursor-pointer"
-        >
-          <img
-            src={user.profileImage}
-            alt="Profile"
-            className="w-8 h-8 rounded-full"
-          />
-          <span className="text-sm">{user.email}</span>
-        </button>
+        {user && (
+          <button
+            onClick={handleToggleDropdown}
+            className="flex items-center gap-2 w-full p-2 rounded hover:bg-gray-100  cursor-pointer"
+          >
+            <img
+              src={user.profileImage}
+              alt="Profile"
+              className="w-8 h-8 rounded-full"
+            />
+            <span className="text-sm">{user.name}</span>
+          </button>
+        )}
 
         {isDropdownOpen && (
           <div className="absolute bottom-14 left-2 right-2 bg-white rounded shadow-lg py-2 z-50">
