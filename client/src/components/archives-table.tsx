@@ -2,12 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from './ui/button';
 import { Logs } from './model/datamodel';
-import { getSupervisorLogs } from '@/lib/getData';
+import { getSupervisorArchives} from '@/lib/getData';
 import { SendFeedbackModal } from './modal/send-feedback';
 
-const LogsTable = () => {
+const ArchivesTable = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortStatus, setSortStatus] = useState('All');
     const [filteredData, setFilteredData] = useState<Logs[]>([]);
@@ -44,7 +43,7 @@ const LogsTable = () => {
       useEffect(() => {
           const fetchTasks = async () => {
             try {
-              const response = await getSupervisorLogs();
+              const response = await getSupervisorArchives();
       
               const data = response.data.map((item: any) => ({
                 log_id: item.log_id,
@@ -84,8 +83,8 @@ const LogsTable = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="All">All</SelectItem>
-                    <SelectItem value="For review">For review</SelectItem>
-                    <SelectItem value="Lacking requirement">Lacking Requirement</SelectItem>
+                    <SelectItem value="Approved">Approved</SelectItem>
+                    <SelectItem value="Denied">Denied</SelectItem>
                   </SelectContent>
                 </Select>
           </div>
@@ -142,4 +141,4 @@ const LogsTable = () => {
   )
 }
 
-export default LogsTable
+export default ArchivesTable

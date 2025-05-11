@@ -19,6 +19,8 @@ import { Button } from "./ui/button";
 import { AddInternModal } from "./modal/add-intern";
 import { SupervisorInterns } from "./model/datamodel";
 import { getInterns } from "@/lib/getData";
+import { updateInternsHours } from "@/lib/insertData";
+import { ViewInternModal } from "./modal/view-intern";
 
 const InternsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,25 +59,33 @@ const InternsTable = () => {
     const fetchInterns = async () => {
       try {
         const response = await getInterns();
-
         const data = response.data.map((item: any) => ({
           fullName: item.intern_id.name,
           dateStarted: item.start_date,
           email: item.intern_id.email,
-          hoursWorked: item.hours_worked,
+          totalHours: item.total_hours,
           internId: item.internship_id,
           status: item.status,
         }));
-
+        console.log(data);
         setInterns(data);
         setFilteredData(data);
       } catch (error) {
         console.error("Failed to fetch interns data:", error);
       }
     };
-
+    updateHours();
     fetchInterns();
   }, []);
+
+  const updateHours = async() => {
+    try {
+      const update = await updateInternsHours();
+      console.log(update);
+    } catch (error) {
+      console.error("Failed to fetch interns data:", error);
+    }
+  };
 
   return (
     <div>
@@ -122,12 +132,10 @@ const InternsTable = () => {
                   <TableCell className="text-center">{intern.fullName}</TableCell>
                   <TableCell className="text-center">{intern.email}</TableCell>
                   <TableCell className="text-center">{intern.dateStarted}</TableCell>
-                  <TableCell className="text-center">{intern.hoursWorked}</TableCell>
+                  <TableCell className="text-center">{intern.totalHours}</TableCell>
                   <TableCell className="text-center">{intern.status}</TableCell>
                   <TableCell className="text-center">
-                    <Button className="hover:bg-gray-700 cursor-pointer">
-                      View
-                    </Button>
+                    <ViewInternModal data={intern}/>
                   </TableCell>
                 </TableRow>
               ))

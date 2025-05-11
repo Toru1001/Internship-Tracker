@@ -6,8 +6,9 @@ import TasksPage from "./pages/interns/tasks";
 import { useState, useEffect } from "react";
 import FeedbacksPage from "./pages/interns/feedbacks_page";
 import LogsPage from "./pages/supervisor/logs_page";
-import AssignPage from "./pages/admin/assign_page";
 import InternsPage from "./pages/supervisor/interns_page";
+import ArchivesPage from "./pages/supervisor/archives";
+import LackingRequirementPage from "./pages/interns/lacking_requirement-page";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
@@ -26,11 +27,13 @@ function App() {
       {isLoggedIn ? (
         <Layout>
           <Routes>
+            <Route path="/" element={<TasksPage />} />
+            <Route path="/archives" element={<ArchivesPage />} />
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/feedbacks" element={<FeedbacksPage />} />
             <Route path="/logs" element={<LogsPage />} />
             <Route path="/interns" element={<InternsPage />} />
-            <Route path="/assign" element={<AssignPage />} />
+            <Route path="/requirements" element={<LackingRequirementPage />} />
           </Routes>
         </Layout>
       ) : (

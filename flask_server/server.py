@@ -38,6 +38,7 @@ def get_interns():
     user_id = request.args.get('userId')
     if not user_id:
         return jsonify({'error': 'userId is required'}), 400
+    
     response = supabase.table('internships').select('*, intern_id(name, email)').eq('supervisor_id', user_id).execute()
     return jsonify(response.data)
 
@@ -50,12 +51,23 @@ def get_avaialableInterns():
 
 ## GET /tasks?user_id=###
 ## Fetch tasks logged by intern
-@app.route('/tasks', methods=['GET'])
-def get_tasks():
+@app.route('/lacking', methods=['GET'])
+def get_lacking():
     user_id = request.args.get('userId')
     if not user_id:
         return jsonify({'error': 'userId is required'}), 400
-    response = supabase.table('work_logs').select('status, task_id(*)').eq('intern_id', user_id).execute()
+    response = supabase.table('work_logs').select('status, task_id(*)').eq('intern_id', user_id).eq('status', 'Lacking requirement').execute()
+    return jsonify(response.data)
+
+## GET /feedbacks?user_id=###
+## Fetch feedbacks logged by intern
+@app.route('/feedbacks', methods=['GET'])
+def get_feedbacks():
+    user_id = request.args.get('userId')
+    if not user_id:
+        return jsonify({'error': 'userId is required'}), 400
+
+    response = supabase.table('feedback').select('*, log_id(*, task_id(*), internship_id(supervisor_id(name)))').eq('log_id.intern_id', user_id).order('feedback_id', desc=True).execute()
     return jsonify(response.data)
 
 ## GET /supervisor/logs?user_id=###
@@ -73,7 +85,38 @@ def get_supervisorLogs():
         if not intern_ids:
             return jsonify([])
 
-        logs_response = supabase.table('work_logs').select('status, task_id(*, intern_id(name))').in_('intern_id', intern_ids).execute()
+        logs_response = supabase.table('work_logs').select('status,log_id, task_id(*, intern_id(name))').in_('intern_id', intern_ids).eq('archive', False).execute()
+        return jsonify(logs_response.data)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+## GET /feedback/single?log_id=???
+## Fetch single feedback from supervisor
+@app.route('/feedback/single', methods=['GET'])
+def get_singleFeedback():
+    log_id = request.args.get('log_id')
+    if not log_id:
+        return jsonify({'error': 'log_id is required'}), 400
+    response = supabase.table('feedback').select('comments').is_('log_id', log_id).order('feedback_id', desc=True).limit(1).execute()
+    return jsonify(response.data)
+    
+## GET /supervisor/archives?user_id=###
+## Fetch all tasks logged by interns of the supervisor
+@app.route('/supervisor/archives', methods=['GET'])
+def get_supervisorArchives():
+    user_id = request.args.get('userId')
+    if not user_id:
+        return jsonify({'error': 'userId is required'}), 400
+
+    try:
+        intern_response = supabase.table('internships').select('intern_id').eq('supervisor_id', user_id).execute()
+        intern_ids = [row['intern_id'] for row in intern_response.data]
+
+        if not intern_ids:
+            return jsonify([])
+
+        logs_response = supabase.table('work_logs').select('status,log_id, task_id(*, intern_id(name))').in_('intern_id', intern_ids).eq('archive', True).execute()
         return jsonify(logs_response.data)
 
     except Exception as e:
@@ -148,18 +191,103 @@ def log_task():
         start_time = datetime.strptime(data['start_time'], "%H:%M")
         end_time = datetime.strptime(data['end_time'], "%H:%M")
         duration = (end_time - start_time).seconds / 3600
+        
+        
+        internship_response = supabase.table('internships').select('internship_id').eq('intern_id', user_id).execute()
+        print('Here')
 
         worklog_response = supabase.table('work_logs').insert({
             'task_id': task_data['task_id'],
             'hours_worked': round(duration, 2),
             'status': "For review",
-            "intern_id": user_id
+            "intern_id": user_id,
+            "internship_id": internship_response.data[0]['internship_id']
         }).execute()
 
         return jsonify({
             'task': task_data,
             'work_log': worklog_response.data[0]
         }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+    
+## POST /feedback
+## Insert feedback data to feedbacks table
+
+@app.route('/log/feedback', methods=['POST'])
+def feedback():
+    data = request.get_json()
+    required = ['log_id','comments', 'status']
+
+
+    if any(field not in data for field in required):
+        return jsonify({'error': 'Missing fields'}), 400
+
+    try:
+        current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        task_response = supabase.table('feedback').insert({
+            'log_id': data['log_id'],
+            'comments': data['comments'],
+            'date_given': current_datetime,
+            'task_status': data['status']
+        }).execute()
+        
+        if data['status'] == "Approved" or data['status'] == "Denied":
+            task_update = supabase.table('work_logs').update({'status': data['status'], 'archive' : True}).eq('log_id', data['log_id']).execute()
+        else:
+            task_update = supabase.table('work_logs').update({'status': data['status'], 'archive' : False}).eq('log_id', data['log_id']).execute()
+
+        task_data = task_response.data[0]
+
+        return jsonify({
+            'message': 'Status updated!',
+            'task': task_data,
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+##  POST /update-total-hours?userId=###
+## Updates and calculated approved logs total_hours worked
+@app.route('/update-total-hours', methods=['POST'])
+def update_total_hours():
+    user_id = request.args.get('userId')
+    if not user_id:
+        return jsonify({'error': 'userId is required'}), 400
+
+    try:
+        # Get all internships under this supervisor
+        internship_response = supabase.table('internships') \
+            .select('internship_id, intern_id') \
+            .eq('supervisor_id', user_id).execute()
+
+        internships = internship_response.data
+
+        for internship in internships:
+            internship_id = internship['internship_id']
+            intern_id = internship['intern_id']
+
+            # Get approved + archived logs for this intern
+            logs_response = supabase.table('work_logs') \
+                .select('hours_worked') \
+                .eq('intern_id', intern_id) \
+                .eq('status', 'Approved') \
+                .eq('archive', True) \
+                .execute()
+
+            logs = logs_response.data
+            total_hours = sum(log['hours_worked'] for log in logs if log['hours_worked'] is not None)
+
+            # Update the internship record
+            supabase.table('internships') \
+                .update({'total_hours': total_hours}) \
+                .eq('internship_id', internship_id) \
+                .execute()
+
+        return jsonify({'message': 'Total hours updated successfully'}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

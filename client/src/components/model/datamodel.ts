@@ -9,7 +9,7 @@ export type SupervisorInterns = {
     fullName: string;
     email: string;
     dateStarted: string;
-    hoursWorked: number;
+    totalHours: number;
     status: string;
 }
 
@@ -38,4 +38,14 @@ export type Logs = {
     end_time: string;
     date_logged: string;
     name: string;
+}
+
+export interface FeedbackData{
+    log_id: number,
+    feedback_id: number,
+    feedback: string,
+    supervisor_name: string,
+    date: string,
+    status: string,
+    logData: any
 }

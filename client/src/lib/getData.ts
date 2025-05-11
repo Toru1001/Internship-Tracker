@@ -39,19 +39,19 @@ export const getInterns = async (): Promise<AxiosResponse> => {
     }
   };
 
-  // export const getTasks = async (): Promise<AxiosResponse> => {
-  //   try {
-  //     const userId = localStorage.getItem('userId');
+  export const getLacking = async (): Promise<AxiosResponse> => {
+    try {
+      const userId = localStorage.getItem('userId');
   
-  //     if (!userId) {
-  //       throw new Error('No userId found in localStorage');
-  //     }
-  //     const response = await axiosInstance.get(`/tasks?userId=${userId}`);
-  //     return response;
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // };
+      if (!userId) {
+        throw new Error('No userId found in localStorage');
+      }
+      const response = await axiosInstance.get(`/lacking?userId=${userId}`);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
 
   export const getTasks = async (): Promise<AxiosResponse> => {
     try {
@@ -75,6 +75,46 @@ export const getInterns = async (): Promise<AxiosResponse> => {
         throw new Error('No userId found in localStorage');
       }
       const response = await axiosInstance.get(`/supervisor/logs?userId=${userId}`);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  export const getSupervisorArchives = async (): Promise<AxiosResponse> => {
+    try {
+      const userId = localStorage.getItem('userId');
+  
+      if (!userId) {
+        throw new Error('No userId found in localStorage');
+      }
+      const response = await axiosInstance.get(`/supervisor/archives?userId=${userId}`);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  export const getFeedbacks = async (): Promise<AxiosResponse> => {
+    try {
+      const userId = localStorage.getItem('userId');
+  
+      if (!userId) {
+        throw new Error('No userId found in localStorage');
+      }
+      const response = await axiosInstance.get(`/feedbacks?userId=${userId}`);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+    export const getFeedback = async (log_id: number): Promise<AxiosResponse> => {
+    try {
+      if (!log_id) {
+        throw new Error('No userId found in localStorage');
+      }
+      const response = await axiosInstance.get(`/feedback/single?log_id=${log_id}`);
       return response;
     } catch (error) {
       throw error;

@@ -29,8 +29,10 @@ $supabaseKey = $_ENV['SUPABASE_KEY'];
 
 $query = http_build_query([
     'select' => 'status,task_id(*)',
-    'intern_id' => 'eq.' . $userId
+    'intern_id' => 'eq.' . $userId,
+    'status' => 'neq.Lacking requirement',
 ]);
+
 
 $url = "$supabaseUrl/rest/v1/work_logs?$query";
 
@@ -59,6 +61,5 @@ if ($httpCode !== 200) {
     exit;
 }
 
-// Output success
 echo $response;
 ?>
