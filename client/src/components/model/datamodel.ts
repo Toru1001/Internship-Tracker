@@ -23,10 +23,13 @@ export type Tasks = {
     status: string;
     taskid: number;
     title: string;
+    log_id: number;
     description: string;
     start_time: string;
     end_time: string;
     date_logged: string;
+    start_proof: string;
+    end_proof: string;
 }
 
 export type Logs = {
@@ -38,6 +41,8 @@ export type Logs = {
     end_time: string;
     date_logged: string;
     name: string;
+    start_proof: string;
+    end_proof: string;
 }
 
 export interface FeedbackData{
@@ -47,5 +52,7 @@ export interface FeedbackData{
     supervisor_name: string,
     date: string,
     status: string,
-    logData: any
+    logData: any,
+    start_proof: string;
+    end_proof: string;
 }

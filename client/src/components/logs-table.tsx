@@ -56,6 +56,8 @@ const LogsTable = () => {
                 end_time: item.task_id.end_time,
                 date_logged: item.task_id.date_logged,
                 name: item.task_id.intern_id.name,
+                start_proof: item.task_id.start_proof,
+                end_proof: item.task_id.end_proof
               }));
               console.log(data);
       

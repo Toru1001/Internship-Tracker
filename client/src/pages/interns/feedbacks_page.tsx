@@ -24,7 +24,9 @@ const FeedbacksPage = () => {
           start_time: feedback.log_id?.task_id?.start_time,
           end_time: feedback.log_id?.task_id?.end_time,
           date_logged: feedback.log_id?.task_id?.date_logged,
-          task_id: feedback.log_id?.task_id?.task_id
+          task_id: feedback.log_id?.task_id?.task_id,
+          start_proof: feedback.log_id?.task_id?.start_proof,
+          end_proof: feedback.log_id?.task_id?.end_proof
         }))
         console.log(data);
         setFeedbacks(data);

@@ -60,11 +60,14 @@ const TasksTable = () => {
         const data = response.data.map((item: any) => ({
           status: item.status,
           taskid: item.task_id.task_id,
+          log_id: item.log_id,
           title: item.task_id.title,
           description: item.task_id.task_description,
           start_time: item.task_id.start_time,
           end_time: item.task_id.end_time,
           date_logged: item.task_id.date_logged,
+          start_proof: item.task_id.start_proof,
+          end_proof: item.task_id.end_proof
         }));
 
         setTasks(data);

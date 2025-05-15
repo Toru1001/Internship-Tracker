@@ -28,9 +28,10 @@ $supabaseUrl = $_ENV['SUPABASE_URL'];
 $supabaseKey = $_ENV['SUPABASE_KEY'];
 
 $query = http_build_query([
-    'select' => 'status,task_id(*)',
+    'select' => 'log_id, status, task_id(*)',
     'intern_id' => 'eq.' . $userId,
     'status' => 'neq.Lacking requirement',
+    'order' => 'status.asc,log_id.asc'
 ]);
 
 
